@@ -1,0 +1,18 @@
+{
+  "name": "nodejs_websocket_serve",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ws.js",
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "pg": "^8.7.3",
+    "ws": "^8.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
