@@ -1,14 +1,19 @@
 const port = process.argv[2];//получаем порт на котором запущен сервер вебсокет
+const fs = require('fs');
 const WebSocketServer = require('ws');
+//const https = require('https');
 const pg = require('pg');
 const os = require('os');
 const cluster = require('cluster');
 var jwt = require('jsonwebtoken');
 var workers_id = [];
 
-
-
-
+/*
+const httpsServer = new https.createServer({
+         cert:fs.readFileSync('/etc/apache2/ssl/cert.pem'),
+		 key:fs.readFileSync('/etc/apache2/ssl/cert.key')
+});
+*/
 
 
 var config = {
@@ -27,20 +32,20 @@ if(cluster.isMaster){//если процесс в кластере - главн�
 	const client = new pg.Client(connStr); //делаем соединение с бд
 
 
-client.connect((err,client,done)=>{
+client.connect(async(err,client,done)=>{
 	if(err)
 	console.log('err');
 	else
 	{
-		console.log('connx');
 	
+
 client.on('notification',(data)=>{//привязываемся к событию и слушаем
 	for(var worker_id in cluster.workers){//при получении сообщения рассылаем всем воркерам
-		console.log(worker_id);
+		
 	cluster.workers[worker_id].send(data.payload);
 }
 		});
-		console.log('main worker');
+		
 	for(var i=0; i<10;i++)
  cluster.fork();//делаем 10 воркеров на каждый процесс
  
@@ -62,12 +67,21 @@ const query = client.query("LISTEN ws_event");
 }else if(cluster.isWorker){
 	var len = 0;
 	var arr_ws = [];//каждый дочерний воркер имеет пул вебсокет-подключений
-	const wss = new WebSocketServer.Server({port:port});//и слушает порт, который был передан оновному процессу
+	var arr_ws_admin = [];
+	const wss = new WebSocketServer.Server({
+		port:port
+		
+	});//и слушает порт, который был передан оновному процессу
 	
 	process.on('message',function(data){
+		try{
 		var message = JSON.parse(data);
-
-	arr_ws[message.id].forEach(ws=>ws.send(data));
+	arr_ws[message.idc]?.forEach(ws=>ws.send(data));
+	arr_ws_admin[message.ida]?.forEach(ws=>ws.send(data));
+		}catch(err){
+			console.log('error JSON parse');
+			console.log(data);
+		};
 	});
 	
 	process.on('error',function(data){
@@ -88,7 +102,6 @@ console.log('create child worker  '+cluster.worker.id);
 
     ws.on("close", (data) => {
         console.log("the client has disconnected");
-        console.log(data);
     });
 
     ws.on('error', function () {
@@ -103,7 +116,7 @@ console.log('create child worker  '+cluster.worker.id);
 	  arr_cookie[c[0].trim()] = c[1].trim();
 	});
 
-	console.log(arr_cookie);
+
 if(arr_cookie['ws_token']!=undefined){
 
 	jwt.verify(arr_cookie['ws_token'],'secret_key',function(err,decoded){
@@ -114,11 +127,21 @@ if(arr_cookie['ws_token']!=undefined){
 	          ws.on('pong',function(){
 		            this.isAlive = true;
                	});
-              
-               	 if(arr_ws[decoded.id]==undefined)
-               	 arr_ws[decoded.id] = [ws];
+               
+				var arr;
+				switch(decoded.role){
+					case 'ROLE_USER':
+						arr = arr_ws;
+						break;
+
+						case 'ROLE_ADMIN':
+						arr = arr_ws_admin;
+						break;
+				}
+               	 if(arr[decoded.id]==undefined)
+               	 arr[decoded.id] = [ws];
                	 else
-               	 arr_ws[decoded.id].push(ws);
+               	 arr[decoded.id].push(ws);
                	 len++;
 					console.log('set ws');
                
@@ -132,18 +155,26 @@ ws.close();
 
 });
 
-
+function clearWSStack(stack){
+var clearPool = true;
 setInterval(()=>{
-
-	arr_ws.forEach((arr,index)=>{
+	console.log('start clear');
+if(clearPool){
+	clearPool = false;
+	var keys = Object.keys(stack);
+	var start_key = 0;
+	var end_key = keys.length;
+	(function cycleClearPool(key){
+		
 		
 		var reIndex = false;
-		arr.forEach((ws,i)=>{
+		stack[key]?.forEach((ws,i)=>{
 			
 			if(!ws.isAlive){
 	        ws.terminate();
-	        delete arr[i];
+	        delete stack[key][i];
 	        reIndex = true;
+			console.log('delete client');
 	    
 		}
 	        else {
@@ -154,11 +185,16 @@ setInterval(()=>{
 		});
 		
 		if(reIndex==true)
-		  arr_ws[index] = arr.filter(ws=>{
+		  stack[key] = stack[key].filter(ws=>{
 			 
 			  if(ws!=undefined)return ws;
 			  });
-	});
+            if(start_key<end_key)
+			  setTimeout(()=>cycleClearPool(keys[++start_key]),0);
+			  else 
+			  clearPool = true;
+			
+})(keys[start_key]);
 	/*
 wss.clients.forEach(ws=>{
 	if(!ws.isAlive) 
@@ -170,13 +206,21 @@ wss.clients.forEach(ws=>{
 		}
 });
 */
-
+console.log('end clear');
 console.log(process.memoryUsage());
 
-console.log(arr_ws[100]?.length);
+}
 },10000);
 
 }
+
+
+
+clearWSStack(arr_ws);
+clearWSStack(arr_ws_admin);
+}
+
+
 
 
 
