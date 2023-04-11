@@ -1,4 +1,4 @@
-node_modules/
-vendor/
-.env/
-composer.lock/
+/node_modules
+/vendor
+/.env
+/package-lock.json
