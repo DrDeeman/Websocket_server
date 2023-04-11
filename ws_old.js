@@ -1,6 +1,6 @@
-
+const port = process.argv[2];//получаем порт на котором запущен сервер вебсокет
 const fs = require('fs');
-
+const WebSocketServer = require('ws');
 const pg = require('pg');
 const os = require('os');
 const cluster = require('cluster');
@@ -33,29 +33,21 @@ if(cluster.isMaster){//если процесс в кластере - главн�
 	const client = new pg.Client(connStr); //делаем соединение с бд
 
 
-	
 client.connect(async(err,client,done)=>{
 	if(err)
 	console.log('err');
 	else
 	{
 	
-		
-
-	
-
-		
 
 client.on('notification',(data)=>{//привязываемся к событию и слушаем
-	//for(var worker_id in cluster.workers)//при получении сообщения рассылаем всем воркерам
-	for(var worker_id in cluster.workers)
-	    cluster.workers[worker_id].send(data.payload);
-
+	for(var worker_id in cluster.workers){//при получении сообщения рассылаем всем воркерам
+	cluster.workers[worker_id].send(data.payload);
+}
 		});
 		
-		for(var i=0; i<10;i++)
-		cluster.fork();//делаем 10 воркеров на каждый процесс	
-
+	for(var i=0; i<10;i++)
+ cluster.fork();//делаем 10 воркеров на каждый процесс
  
 
 	
@@ -70,56 +62,56 @@ const query = client.query("LISTEN ws_event");
 		cluster.fork();
 	});
 	
-	
+	console.log("The WebSocket server is running on port "+port);
 	
 }else if(cluster.isWorker){
 	var len = 0;
 	var arr_ws = [];//каждый дочерний воркер имеет пул вебсокет-подключений
 	var arr_ws_admin = [];
-	//const wss = new WebSocketServer.Server({
-	//	port:port
+	const wss = new WebSocketServer.Server({
+		port:port
 		
-	//});//и слушает порт, который был передан оновному процессу
+	});//и слушает порт, который был передан оновному процессу
 	
 	process.on('message',function(data){
 		try{
-		
+			
 		var message = JSON.parse(data);
-	    arr_ws[message.idc]?.forEach(ws=>ws.send(data));
-	   
-
+	arr_ws[message.idc]?.forEach(ws=>ws.send(data));
+	//arr_ws_admin[message.ida]?.forEach(ws=>ws.send(data));
 		}catch(err){
-		//	console.log(err);
-			//console.log(data);
 			
 		};
 	});
 	
 	process.on('error',function(data){
-		console.log(data);
+		console.log('error');
 	});
 	
 console.log('create child worker  '+cluster.worker.id);
 
+  wss.on("connection", (ws,request,resp) => {
+
+	  console.log('client connect in '+port+' in worker '+cluster.worker.id);
 
 
+    ws.on("message", data => {
+        console.log(`Client has sent us: ${data}`)
+    });
+    
 
-const port = Number(process.argv[2]);
-this.open = 0
+    ws.on("close", (data) => {
+        console.log("the client has disconnected");
+    });
 
+    ws.on('error', function () {
+        console.log("Some Error occurred")
+    });
+    
 
-
-var wss = require('uWebSockets.js').App({})
-    .ws('/*', {
-      compression: 0,
-      maxPayloadLength: 16384,
-      idleTimeout: 32,
-      maxBackpressure: 66560,
-	  upgrade:(response,request,context)=>{
-
-		var arr_cookie = [];
-        var wsInfo= {};
-		request.getHeader('cookie')?.split(';').map(cookie=>{
+	var arr_cookie = [];
+	
+    request.headers?.cookie?.split(';').map(cookie=>{
       var c = cookie.split('=');
 	  arr_cookie[c[0].trim()] = c[1].trim();
 	});
@@ -128,79 +120,41 @@ var wss = require('uWebSockets.js').App({})
 if(arr_cookie['ws_token']!=undefined){
 
 	jwt.verify(arr_cookie['ws_token'],'secret_key',function(err,decoded){
-		if(decoded!=undefined){		
-			wsInfo.id_user = Number(decoded.id); 
-			wsInfo.isAlive = true;   
-			wsInfo.role = decoded.role;          
+		if(decoded!=undefined){
+			
+			ws.id_user = decoded.id; 
+				ws.isAlive = true;
+	          ws.on('pong',function(){
+		            this.isAlive = true;
+               	});
+               
+				var arr;
+				switch(decoded.role){
+					case 'ROLE_USER':
+						arr = arr_ws;
+						break;
+
+						case 'ROLE_ADMIN':
+						arr = arr_ws_admin;
+						break;
+				}
+               	 if(arr[decoded.id]==undefined)
+               	 arr[decoded.id] = [ws];
+               	 else
+               	 arr[decoded.id].push(ws);
+               	 len++;
+				 console.log(decoded.id);
+					console.log('set ws');
+               
 }
-		   
-		   
+		   else 
+		   ws.close();  
 		});
 }
+else
+ws.close();
 
-        
-		 response.upgrade( // upgrade to websocket
-         wsInfo, // 1st argument sets which properties to pass to ws object, in this case ip address
-         request.getHeader('sec-websocket-key'),
-         request.getHeader('sec-websocket-protocol'),
-         request.getHeader('sec-websocket-extensions'), // 3 headers are used to setup websocket
-         context // also used to setup websocket
-      );
-	  },
-
-
-      pong:(ws)=>{
-        ws.isAlive = true;
-	  },
-	  ping:(ws)=>{
-         ws.isAlive = false;
-	  },
-      open: (ws,request) => {
-		if(ws.id_user){
-		   
-	
-			if(arr_ws[ws.id_user]==undefined)
-			arr_ws[ws.id_user] = [ws];
-			else
-			arr_ws[ws.id_user].push(ws);
-			len++;
-			ws.isClose = false;
-			console.log('set ws');
-			console.log('id:'+ws.id_user+' length:'+(arr_ws[ws.id_user]?.length ?? 0)+' in cluster:'+cluster.worker.id);
-	}
-	else ws.close();
-      },
-
-
-
-
-
-      message: (client, message /*, isBinary*/) => {
-      },
-      drain: client => {
-        console.log('drain', client, client.getBufferedAmount())
-      },
-      close: (ws, code, message) => {
-        console.log('close');
-		ws.isClose = true;
-		ws.isAlive = false;
-      }
-    })
-    .listen(port, ws => {
-		if(ws)
-        console.log(`Listening to port ${port}`);
-		else 
-		console.log('Not listening');
-    })
-
-
-
-
-	
-
-	
-
-
+});
 
 function clearWSStack(stack){
 var clearPool = true;
@@ -218,13 +172,17 @@ if(clearPool){
 		stack[key]?.forEach((ws,i)=>{
 			
 			if(!ws.isAlive){
-	        if(!ws.isClose)ws.close();
+	        ws.terminate();
 	        delete stack[key][i];
 	        reIndex = true;
 			console.log('delete client');
 	    
 		}
-	     
+	        else {
+		
+	        ws.ping();
+	        ws.isAlive = false;
+		}
 		});
 		
 		if(reIndex==true)
@@ -238,7 +196,7 @@ if(clearPool){
 			  clearPool = true;
 			
 })(keys[start_key]);
-/*	
+	/*
 wss.clients.forEach(ws=>{
 	if(!ws.isAlive) 
 	        ws.terminate();
@@ -261,10 +219,4 @@ wss.clients.forEach(ws=>{
 
 clearWSStack(arr_ws);
 clearWSStack(arr_ws_admin);
-
 }
-
-
-
-
-
