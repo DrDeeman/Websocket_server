@@ -110,41 +110,47 @@ this.open = 0
 
 var wss = require('uWebSockets.js').App({})
     .ws('/*', {
-      compression: 0,
-      maxPayloadLength: 16384,
-      idleTimeout: 32,
-      maxBackpressure: 66560,
+	
 	  upgrade:(response,request,context)=>{
-
+        
 		var arr_cookie = [];
         var wsInfo= {};
+
+
+
 		request.getHeader('cookie')?.split(';').map(cookie=>{
+		
       var c = cookie.split('=');
-	  arr_cookie[c[0].trim()] = c[1].trim();
+	  arr_cookie[c[0]?.trim()] = c[1]?.trim();
 	});
 
-
+	
 if(arr_cookie['ws_token']!=undefined){
 
 	jwt.verify(arr_cookie['ws_token'],'secret_key',function(err,decoded){
 		if(decoded!=undefined){		
+			
 			wsInfo.id_user = Number(decoded.id); 
 			wsInfo.isAlive = true;   
-			wsInfo.role = decoded.role;          
-}
-		   
-		   
-		});
-}
-
-        
-		 response.upgrade( // upgrade to websocket
+			wsInfo.role = decoded.role;    
+			
+			response.upgrade( // upgrade to websocket
          wsInfo, // 1st argument sets which properties to pass to ws object, in this case ip address
          request.getHeader('sec-websocket-key'),
          request.getHeader('sec-websocket-protocol'),
          request.getHeader('sec-websocket-extensions'), // 3 headers are used to setup websocket
          context // also used to setup websocket
       );
+
+	  
+} else response.end(); 
+	
+		   
+		});
+}
+
+        
+
 	  },
 
 
@@ -155,19 +161,23 @@ if(arr_cookie['ws_token']!=undefined){
          ws.isAlive = false;
 	  },
       open: (ws,request) => {
-		if(ws.id_user){
-		   
 	
+		if(ws.id_user){
+			
 			if(arr_ws[ws.id_user]==undefined)
 			arr_ws[ws.id_user] = [ws];
 			else
 			arr_ws[ws.id_user].push(ws);
 			len++;
 			ws.isClose = false;
-			console.log('set ws');
+			
 			console.log('id:'+ws.id_user+' length:'+(arr_ws[ws.id_user]?.length ?? 0)+' in cluster:'+cluster.worker.id);
 	}
-	else ws.close();
+	else {
+		
+		ws.end();
+	}
+	
       },
 
 
@@ -180,7 +190,6 @@ if(arr_cookie['ws_token']!=undefined){
         console.log('drain', client, client.getBufferedAmount())
       },
       close: (ws, code, message) => {
-        console.log('close');
 		ws.isClose = true;
 		ws.isAlive = false;
       }
