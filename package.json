@@ -4,6 +4,8 @@
   "description": "",
   "main": "ws.js",
   "dependencies": {
+    "@babel/cli": "^7.22.9",
+    "@babel/core": "^7.22.9",
     "dotenv": "^16.0.3",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.7.3",
@@ -11,9 +13,25 @@
     "ws": "^8.6.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run build && node ./build/ws.js",
+    "start:dev": "nodemon --exec babel-node ./ws.js",
+    "clean": "rm -rf build && mkdir build",
+    "build-babel": "babel -d ./build ./ws.js -s",
+    "build": "npm run clean && npm run build-babel"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/node": "^7.22.6",
+    "@babel/plugin-transform-nullish-coalescing-operator": "^7.22.5",
+    "@babel/plugin-transform-optional-chaining": "^7.22.6",
+    "@babel/plugin-transform-runtime": "^7.22.9",
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.22.9",
+    "@babel/runtime": "^7.22.6",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-es2015": "^6.24.1"
+  }
 }

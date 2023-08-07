@@ -143,10 +143,17 @@ if(arr_cookie['ws_token']!=undefined){
       );
 
 	  
-} else response.end(); 
+} else {
+	console.log('fast close');
+	response.end(); 
+}
 	
 		   
 		});
+} else {
+	console.log('not ws');
+	console.log(arr_cookie);
+	response.end();
 }
 
         
