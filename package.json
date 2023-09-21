@@ -9,7 +9,7 @@
     "dotenv": "^16.0.3",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.7.3",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v26.0.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.31.0",
     "ws": "^8.6.0"
   },
   "scripts": {

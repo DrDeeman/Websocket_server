@@ -1,0 +1,58 @@
+version: '3.9'
+services:
+
+  nginx_server:
+    image: nginx:alpine
+    container_name: webserver
+    volumes:
+      - ./upstreams.conf:/etc/nginx/conf.d/upstreams.conf
+    restart: unless-stopped
+    #command: ["sysctl", "-w", "fs.file-max=1048576"]
+    ulimits:
+       nproc: 500000
+    tty: true
+    ports:
+      - "8071:8071"
+      #- "80:80"
+      #- "443:443"
+    networks:
+     web:
+       ipv4_address: 172.16.238.7
+  
+
+
+  node_app1:
+    build:
+      context: .
+      dockerfile: ./dockerNodeApp
+    container_name: node_app1
+    command: ["node", "wsd", "9000"]
+    networks:
+      web:
+        ipv4_address: 172.16.238.8
+
+  node_app2:
+    build:
+      context: .
+      dockerfile: ./dockerNodeApp
+    container_name: node_app2
+    command: ["node", "wsd", "9000"]
+    networks:
+      web:
+        ipv4_address: 172.16.238.9
+
+  node_app3:
+    build:
+      context: .
+      dockerfile: ./dockerNodeApp
+    container_name: node_app3
+    command: ["node", "wsd", "9000"]
+    networks:
+      web:
+        ipv4_address: 172.16.238.10
+  
+
+
+networks:
+  web:
+    external: true

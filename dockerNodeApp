@@ -1,16 +1,16 @@
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt update && apt install -y curl
-RUN curl -sL https://deb.nodesource.com/setup_16.x
-RUN apt -y install nodejs && apt -y install npm
+RUN apt update && apt install -y curl && apt install -y nano
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt -y install nodejs
 WORKDIR /app
 #COPY ./package.json .
 #RUN npm config set registry http://registry.npmjs.org/
 #RUN npm i --verbose
 COPY . .
-EXPOSE 9000
-EXPOSE 9001
-EXPOSE 9002
-CMD ["node", "wsd", "9000"]
-CMD ["node", "wsd", "9001"]
-CMD ["node", "wsd", "9002"]
+#EXPOSE 9000
+#EXPOSE 9001
+#EXPOSE 9002
+#CMD ["node", "wsd", "9000"]
+#CMD ["node", "wsd", "9001"]
+#CMD ["node", "wsd", "9002"]
