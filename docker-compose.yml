@@ -31,17 +31,10 @@ services:
       mode: replicated
       replicas: 3
     networks:
-        - websocket
+        - web
   
 
 
 networks:
   web:
     external: true
-  websocket:
-    driver: bridge
-    name: websocket
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.16.237.0/24
