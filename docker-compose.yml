@@ -21,38 +21,27 @@ services:
   
 
 
-  node_app1:
+  node_app:
     build:
       context: .
       dockerfile: ./dockerNodeApp
-    container_name: node_app1
+    container_name: node_app
     command: ["node", "wsd", "9000"]
+    deploy:
+      mode: replicated
+      replicas: 3
     networks:
-      web:
-        ipv4_address: 172.16.238.8
-
-  node_app2:
-    build:
-      context: .
-      dockerfile: ./dockerNodeApp
-    container_name: node_app2
-    command: ["node", "wsd", "9000"]
-    networks:
-      web:
-        ipv4_address: 172.16.238.9
-
-  node_app3:
-    build:
-      context: .
-      dockerfile: ./dockerNodeApp
-    container_name: node_app3
-    command: ["node", "wsd", "9000"]
-    networks:
-      web:
-        ipv4_address: 172.16.238.10
+        - websocket
   
 
 
 networks:
   web:
     external: true
+  websocket:
+    driver: bridge
+    name: websocket
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.237.0/24
