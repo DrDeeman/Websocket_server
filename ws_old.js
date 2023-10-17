@@ -110,7 +110,7 @@ console.log('create child worker  '+cluster.worker.id);
     
 
 	var arr_cookie = [];
-	
+     console.log(request.headers);
     request.headers?.cookie?.split(';').map(cookie=>{
       var c = cookie.split('=');
 	  arr_cookie[c[0].trim()] = c[1].trim();

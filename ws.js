@@ -115,19 +115,23 @@ var wss = require('uWebSockets.js').App({})
         
 		var arr_cookie = [];
         var wsInfo= {};
+        var ws_token;	
+if(request.getHeader('authorization')){
+   ws_token = (request.getHeader('authorization')?.split(' '))[1];
+}
 
-
-
+  if(request.getHeader('cookie')){
 		request.getHeader('cookie')?.split(';').map(cookie=>{
 		
       var c = cookie.split('=');
 	  arr_cookie[c[0]?.trim()] = c[1]?.trim();
 	});
-
+	ws_token = arr_cookie['ws_token'];
+  }
 	
-if(arr_cookie['ws_token']!=undefined){
+if(ws_token!=undefined){
 
-	jwt.verify(arr_cookie['ws_token'],'secret_key',function(err,decoded){
+	jwt.verify(ws_token,process.env.JWT_PASSPHRASE,function(err,decoded){
 		if(decoded!=undefined){		
 			
 			wsInfo.id_user = Number(decoded.id); 
@@ -155,6 +159,7 @@ if(arr_cookie['ws_token']!=undefined){
 	console.log(arr_cookie);
 	response.end();
 }
+
 
         
 
