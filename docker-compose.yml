@@ -21,7 +21,7 @@ services:
       #- "443:443"
     networks:
      web:
-       ipv4_address: 172.16.238.7
+       ipv4_address: 172.16.238.8
   
 
 
