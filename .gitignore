@@ -2,3 +2,4 @@
 /vendor
 /.env
 /package-lock.json
+/ssl/*
