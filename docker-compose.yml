@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: ./dockerNodeApp
     container_name: node_app
-    command: ["node", "wsd", "9000"]
+    command: ["node", "ws", "9000"]
     deploy:
       mode: replicated
       replicas: 3
