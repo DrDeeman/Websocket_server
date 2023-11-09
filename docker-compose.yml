@@ -6,7 +6,7 @@ services:
     container_name: webserver
     volumes:
       - ./upstreams.conf:/etc/nginx/conf.d/upstreams.conf
-      - ./ssl:/var/ssl
+      - ./dockerData/docker_settings/ssl:/var/ssl
     restart: unless-stopped
     #command: ["sysctl", "-w", "fs.file-max=1048576"]
     ulimits:
@@ -15,19 +15,13 @@ services:
          soft: 500000
          hard: 1048576
     tty: true
-    logging:
-      driver: "json-file"
-      options:
-         max-file: "10"
-         max-size: "10m"
     ports:
-      - "8070:8070"
-      - "8020:8020"
+      - "8071:8071"
       #- "80:80"
       #- "443:443"
     networks:
      web:
-       ipv4_address: 172.16.238.8
+       ipv4_address: 172.16.238.7
   
 
 
@@ -35,12 +29,8 @@ services:
     build:
       context: .
       dockerfile: ./dockerNodeApp
-    command: ["node", "ws", "9000"]
-    logging:
-      driver: "json-file"
-      options:
-         max-file: "10"
-         max-size: "10m"
+    container_name: node_app
+    command: ["node", "wsd", "9000"]
     deploy:
       mode: replicated
       replicas: 3
