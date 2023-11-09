@@ -29,7 +29,6 @@ services:
     build:
       context: .
       dockerfile: ./dockerNodeApp
-    container_name: node_app
     command: ["node", "ws", "9000"]
     deploy:
       mode: replicated
