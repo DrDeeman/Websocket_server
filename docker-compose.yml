@@ -6,7 +6,7 @@ services:
     container_name: webserver
     volumes:
       - ./upstreams.conf:/etc/nginx/conf.d/upstreams.conf
-      - ./dockerData/docker_settings/ssl:/var/ssl
+      - ./ssl:/var/ssl
     restart: unless-stopped
     #command: ["sysctl", "-w", "fs.file-max=1048576"]
     ulimits:
