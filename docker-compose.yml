@@ -1,6 +1,8 @@
 version: '3.9'
 services:
 
+
+
   nginx_server:
     image: nginx:alpine
     container_name: webserver
@@ -17,13 +19,13 @@ services:
     tty: true
     ports:
       - "8071:8071"
+      - "8070:8070"
       #- "80:80"
       #- "443:443"
     networks:
      web:
        ipv4_address: 172.16.238.8
-  
-
+      
 
   node_app:
     build:
@@ -33,8 +35,12 @@ services:
     deploy:
       mode: replicated
       replicas: 3
+    depends_on:
+    db:
+      condition: service_healthy
     networks:
         - web
+    restart: always
   
 
 

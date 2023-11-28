@@ -148,7 +148,7 @@ if(ws_token!=undefined){
 
 	  
 } else {
-	console.log('fast close');
+	console.log(request.getHeader('user-agent')+' '+request.getHeader('authorization')+' '+ws_token+'fast close');
 	response.end(); 
 }
 	
