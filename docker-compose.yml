@@ -35,9 +35,9 @@ services:
     deploy:
       mode: replicated
       replicas: 3
-    depends_on:
-    db:
-      condition: service_healthy
+    #depends_on:
+    #  db:
+    #    condition: service_healthy
     networks:
         - web
     restart: always

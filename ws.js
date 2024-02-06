@@ -84,7 +84,9 @@ const query = client.query("LISTEN ws_event");
 		try{
 		
 		var message = JSON.parse(data);
-	    arr_ws[message.idc]?.forEach(ws=>ws.send(data));
+
+		if(message.data?.idc)
+	    arr_ws[message.data.idc]?.forEach(ws=>ws.send(data));
 	   
 
 		}catch(err){
